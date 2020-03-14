@@ -1,0 +1,338 @@
+---
+title: 'WHO GETS TO BE HAPPY?'
+output:
+  html_document:
+    code_folding: hide
+  pdf_document: default
+---
+<style type="text/css">
+h1.title {
+  font-size: 30px;
+  text-align: center;
+}
+h4.author { 
+    font-size: 20px;
+  font-family: "Times New Roman", Times, serif;
+  text-align: center;
+}
+h4.date { 
+  font-size: 20px;
+  font-family: "Times New Roman", Times, serif;
+  text-align: center;
+}
+
+</style>
+
+<style type="text/css">
+  body {
+    background-color: #F6F6F4;
+  }
+</style>
+```{r include=FALSE}
+library(ggplot2)
+library(ggthemes)
+library(nlme)
+library(gganimate)
+library(gapminder)
+library(ggExtra)
+library(psych)
+library(reshape2)
+library(dplyr)
+library(nycflights13)
+library(ggcorrplot)
+library(waffle)
+library(tidyr)
+library(scales)
+library(ggalt)
+library(data.table)
+library(extrafont)
+library(lubridate)
+library(DT)
+library(grid)
+library(gridExtra)
+library(prettydoc)
+library(devtools)
+library(tidyverse)
+library(ggdark)
+library(here)
+library(png)
+library(gifski)
+library(forcats)
+library(tufte)
+library(colorspace)
+library(viridisLite)
+library(Zelig)
+library(formatR)
+library(DiagrammeR)
+library(xaringan)
+library(ggridges)
+library(GGally)
+library(RColorBrewer)
+
+```
+
+```{r include=FALSE}
+#### General Colors ####
+Axis_color = '#888888'
+Background_color= '#f6f6f4'
+General_color1 = '#9b2d6e'
+General_color2= '#2f9480'
+General_color3 = '#779ECB'
+Africa_color = '#404040'
+Europe_color= '#00c8de'
+Asia_color = '#ffca50'
+America_color = '#ff552d'
+Oceania_color = '#088A08'
+Trend_color = '#FFFFFF'
+
+#### Theme ####
+GroupC_theme<- theme_bw()+theme(
+  #Panel
+    panel.background = element_rect(fill=Background_color),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+  #Plot
+    
+    plot.background = element_rect(fill=Background_color),
+    plot.title = element_text(size = 10, hjust = 0.5, color = Axis_color),
+  #Axis
+    axis.title = element_text(size =9, hjust = 0.5, color = Axis_color),
+    axis.text = element_text(colour = Axis_color, size = 7),
+    axis.ticks = element_blank(),
+    axis.line = element_line(colour = Axis_color, size=0.2), 
+  #Legend
+    legend.background = element_rect(fill = Background_color),
+    legend.text	= element_text(size = 9, hjust = 0.5, color = Axis_color), 
+    legend.position = c(0.9, 0.15),
+    legend.key = element_blank(),
+    legend.title = element_blank(),
+  #Strip
+    strip.background =element_rect(fill = Background_color), 
+    strip.text = element_text(size = 9, color = Axis_color)
+  #Labs
+)
+theme_set(GroupC_theme)
+```
+```{r include=FALSE}
+folder_path <- "C:/Users/Katlego/OneDrive - IE Students/IE BUSINESS SCHOOL/II/Data Visualization/Assignments/First"
+happiness <- fread(file.path(folder_path, "Dataset 2005-2018.csv"), sep = ",", header = TRUE)
+
+```
+# Who is the happiest?
+
+```{r include=FALSE}
+names(happiness)
+head(happiness, n=20)
+str(happiness)
+summary(happiness)
+```
+
+```{r collapse = TRUE,echo=FALSE,fig.show='hold',fig.align="center",tidy=TRUE}
+# Happiness by Country over Time 
+ggplot(happiness) +
+  geom_line(aes (Year, Score, group = Country), alpha = 0.7,lwd = 0.2, show.legend = F, color= General_color1)+
+  coord_cartesian(xlim=c(2008,2018))+
+  scale_x_continuous(breaks = c(2008, 2018), label = c("2008", "2018"))+ 
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+
+  xlab("Year") + ylab("Happiness Index")
+```
+
+```{r include=FALSE,fig.align="center",tidy=TRUE}
+# Happiness by Continent over Time 
+ggplot(happiness) +
+  geom_line(aes (Year, Score, group = Country, color=Continent), alpha = 0.9,lwd = 0.2, show.legend = T)+
+  coord_cartesian(xlim=c(2008,2018))+
+  scale_color_manual(values=c(Africa_color, America_color, Asia_color, Europe_color, Oceania_color))+
+  scale_x_continuous(breaks = c(2008, 2018), label = c("2008", "2018"))+ 
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+
+  xlab("Year") + ylab("Happiness Index")
+```
+
+
+```{r fig.align="center",tidy=TRUE}
+# Happiness - Continent Trendline
+Trend<- happiness %>% group_by(Continent,Year) %>% summarise(Score=mean(Score))
+ggplot() +
+  geom_line(data = transform(happiness, Continent = NULL), aes (Year, Score, group=Country), alpha = 0.5, lwd = 0.05)+
+  coord_cartesian(xlim=c(2008,2018))+
+  geom_line(data=Trend,aes(Year,Score, group= Continent, color=Continent),lwd = 0.8, show.legend=F)+
+  scale_color_manual(values=c(Africa_color, America_color, Asia_color, Europe_color, Oceania_color))+
+  scale_x_continuous(breaks = c(2008, 2018), label = c("2008", "2018"))+ 
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+
+  theme(axis.title.x = element_blank()) + ylab("Happiness Index")
+
+
+```
+
+```{r message=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+# Happiness by Continent  over Time - Splited #
+ggplot() +
+  geom_line(data = transform(happiness, Continent = NULL), aes (Year, Score, group=Country), alpha = 0.25, lwd = 0.05)+
+  geom_line(data=happiness, aes (Year, Score, group = Country, color=Continent), lwd = 0.20, show.legend = FALSE)+
+  scale_color_manual(values=c(Africa_color, America_color, Asia_color, Europe_color, Oceania_color))+
+  facet_wrap(~ Continent, ncol=3, strip.position = "bottom")+ 
+  theme(strip.background = element_blank(), strip.placement = "outside") +
+  theme(axis.text.x = element_blank(), axis.line.x =  element_blank() )+
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+
+  coord_cartesian(xlim=c(2008,2018))+
+  geom_smooth(data=happiness,aes(Year, Score, group = 1), lwd = 1, method = 'loess', span = 0.1, se = TRUE, color = Trend_color)+
+  ylab("Happiness Index")+theme(axis.title.x = element_blank())
+```
+
+# Can money buy happiness?
+```{r messages=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+Recent <- happiness[happiness$Year==2018,]
+
+# Can money buy happiness? 
+ggplot(Recent, aes(x=exp(GDP), y=Score, color=Continent)) + 
+  geom_point(size=1.5,show.legend = F)+ 
+  scale_color_manual(values=c(Africa_color, America_color, Asia_color, Europe_color, Oceania_color))+
+  geom_vline(xintercept=30000, color= Axis_color, linetype = "dashed")+
+  scale_x_continuous(breaks = c(0,30000,75000), label = c("low", "30.000","high"))+ 
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+
+  xlab("GDP per Capita") + ylab("Happiness Index")
+```
+\
+There is a positive relationship between happiness and GDP per Capita. But why is this not true for the Americas? 
+
+```{r message=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+# Zoom to Low GDP(Treshold=30K) Countries # (Add X Label)
+
+ggplot()+
+  geom_point(data = transform(Recent, Continent = NULL), aes (x=exp(GDP), y=Score), alpha = 0.08, lwd = 2)+
+  geom_point(data=Recent, aes (x=exp(GDP), y=Score, color=Continent), lwd = 2, show.legend = FALSE)+
+  scale_color_manual(values=c(Africa_color, America_color, Asia_color, Europe_color, Oceania_color))+
+  facet_wrap(~ Continent, ncol=3, strip.position = "bottom")+ 
+  theme(strip.background = element_blank(), strip.placement = "outside") +
+  theme(axis.text.x = element_blank(), axis.line.x =  element_blank())+
+  ylab("Happiness Index")+theme(axis.title.x = element_blank())+
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+
+  xlim(0,30000)
+```
+\
+When compared to countries within the same GDP range, the americas have a higher average ranking in the Happiness Index.
+
+But is this true for all countries in the Americas?
+
+```{r message=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+#### Understanding the Americas ####
+
+America <- filter(happiness, Continent == "America" & Year %in% c(2010, 2018)) %>% select(Country, Year, GDP)
+America$GDP<- exp(America$GDP)
+America2 <- spread(America, Year, GDP)
+names(America2) <- c("Country", "y2010", "y2018")
+America2 <- arrange(America2, desc(y2010))
+America2$Country <- factor(America2$Country, levels=rev(America2$Country))
+
+# Does North America have low GDP (Treshold=30K)? #
+ggplot(America2, aes(Country, x = y2010, xend = y2018)) +
+  geom_vline(xintercept=30000, color= Axis_color, linetype = "dashed")+
+  geom_dumbbell(color=America_color)+
+  scale_x_continuous(breaks = c(0,30000,55000), label = c("low", "30.000","high"))+
+  xlab("GDP per Capita")+theme(axis.title.y = element_blank())
+```
+\
+Latin American and Carribean countries are below the threshold. Begging the question, what are the other factors that affect happiness? 
+
+```{r message=FALSE,warning=FALSE,fig.align='center',tidy=TRUE}
+# Focus on Latin America & Caribbean  
+# What factors are truly impacting their happiness index? #
+Latin<- happiness %>% filter(Region=="Latin America and Caribbean"& Year>=2010 ) %>%
+        select(Region,Year, GDP,Social_Support, Life_Expectancy,Freedom_Choices) %>%
+        group_by(Year)%>%
+        summarise( Social_Support=mean(Social_Support),Freedom_Choices=mean(Freedom_Choices),
+                   Life_Expectancy=mean(Life_Expectancy),GDP=mean(exp(GDP)))
+World <- happiness %>% filter(Year>=2010) %>%
+          select(Continent,Year, GDP,Social_Support, Life_Expectancy,Freedom_Choices) %>%
+          group_by(Year)%>%
+          summarise( Social_Support=mean(Social_Support, na.rm = T), Freedom_Choices=mean(Freedom_Choices,na.rm = T),
+                     Life_Expectancy=mean(Life_Expectancy, na.rm = T),GDP=mean(exp(GDP),na.rm = T))
+Latin$Continent<-"Latin America"
+World$Continent<-"Rest of the World"
+df <- rbind(World,Latin)
+
+ggparcoord(df, columns = 2:5, groupColumn = 6, alphaLines = 0.3, showPoints = TRUE)+
+  scale_color_manual(values=c(America_color, General_color1))+
+  theme(legend.text	= element_text(size = 6, hjust = 0.5), legend.position = c(0.9, 0.9))+
+  theme(axis.title.x = element_blank(),axis.title.y = element_blank())+
+  scale_y_continuous(breaks = c(-0.8, 1.8), label = c("low", "high"))+
+  scale_x_discrete(labels=c("Social_Support" = "Social Support", "Freedom_Choices" = "Freedom of Choices", "Life_Expectancy" = "Life Expectancy","GDP"="GDP per Capita"))
+
+```
+\
+We can observe that the support of family and friends, the level of freedom they enjoy and their longevity affect the happiness of Latin Americans than GDP per Capita.
+
+Are all Latin American countries happy all the time? 
+```{r include=FALSE, message=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+# Identifying the Venezuela
+Latin2 <- happiness %>% filter(Region=="Latin America and Caribbean");
+ggplot(Latin2, aes(Year, Score)) +
+  geom_line(color="#cccccc") +
+  facet_wrap(~Country,  ncol=3) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+```{r message=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+Venezuela <- Latin2 %>% filter(Country=="Venezuela")
+ggplot() +
+  geom_line(data=Latin2,aes(Year, Score, group = Country), alpha = 0.7,lwd = 0.1, show.legend = F, color= America_color)+
+  geom_line(data=Venezuela, aes (Year,Score,color=Country), lwd = 0.8, show.legend = T)+
+  coord_cartesian(xlim=c(2008,2018))+
+  theme(legend.text	= element_text(size = 6, hjust = 0.5), legend.position = c(0.88, 0.95))+
+  scale_y_continuous(breaks = c(4, 7), label = c("low", "high"))+ ylab("Happiness Index")+
+  scale_x_continuous(breaks = c(2008,2018), label = c("2008","2018"))+
+  theme(axis.title.x = element_blank())
+```
+
+# Government policy influence on happiness
+```{r message=FALSE,warning=FALSE,fig.align="center",tidy=TRUE}
+# Does the government con
+Venezuela <- Venezuela %>% mutate_each_(funs(scale(.) %>% as.vector), vars=c(5,11:13))  
+df2<-Venezuela %>% filter(Year %in% c(2012,2013,2016))
+
+Government <-ggplot()+
+  geom_line(data=Venezuela, aes (Year,Score,color=America_color), lwd = 0.8,show.legend = T)+
+  geom_line(data=Venezuela, aes (Year,Confidence_Government,color=General_color2), lwd = 0.8, show.legend = T)+
+  scale_color_manual(values=c(America_color, General_color2),labels=c("Happiness","Government Trust"))+
+  theme(legend.text	= element_text(size = 8, hjust = 0.5), legend.position = c(0.88, 0.90))+
+  geom_point(data=df2, aes (x=Year, y=Score,color=America_color) ,lwd = 2)+
+  geom_point(data=df2, aes (x=Year, y=Confidence_Government,color=General_color2), lwd = 2)+
+  
+  coord_cartesian(xlim=c(2010,2018))+
+  annotate(geom = "curve", x = 2011.5, y = -0.2, xend = 2012, yend =0.6 , curvature = .3, arrow = arrow(length = unit(1.5, "mm")), color=Axis_color) +
+  annotate(geom = "text", x = 2011.4, y = -0.3, label = "Chavez Died", hjust = "right",color=Axis_color,size=3)+
+  annotate(geom = "curve", x = 2012.3, y = -1, xend = 2013, yend =-0.3 , curvature = .3, arrow = arrow(length = unit(1.5, "mm")),color=Axis_color) +
+  annotate(geom = "text", x = 2012.2, y = -1, label = "New President", hjust = "right",color=Axis_color, size=3)+
+  scale_x_continuous(breaks = c(2012,2013,2016), label = c("2012","2013","2016"))+
+  scale_y_continuous(breaks = c(-2, 1), label = c("low", "high"))+
+  theme(axis.title.y = element_blank(),axis.title.x = element_blank())
+
+Corruption <- ggplot()+
+  geom_line(data=Venezuela, aes (Year,Score), color=America_color,lwd = 0.8,show.legend = T)+
+  geom_line(data=Venezuela, aes (Year,Corruption_Perception,color=General_color3), lwd = 0.8,show.legend = T)+
+  scale_color_manual(values=c(General_color3),labels=c("Corruption"))+
+  theme(legend.text	= element_text(size = 8, hjust = 0.5), legend.position = c(0.88, 0.94))+
+  geom_point(data=df2, aes (x=Year, y=Score), color=America_color, lwd = 2)+
+  geom_point(data=df2, aes (x=Year, y=Corruption_Perception, color=General_color3),lwd = 2)+
+  
+  coord_cartesian(xlim=c(2010,2018))+  
+  annotate(geom = "curve", x = 2016.5, y = 0.5, xend = 2016.1, yend =1.3 , curvature = .3, arrow = arrow(length = unit(1.5, "mm")),color=Axis_color) +
+  annotate(geom = "text", x = 2016.3, y = 0,5, label = "Highest Inflation \n 800%", hjust = "left", color=Axis_color, size=3)+
+  annotate(geom = "curve", x = 2012, y = 1.7, xend = 2012.8, yend =1 , curvature = .3, arrow = arrow(length = unit(1.5, "mm")),color=Axis_color) +
+  annotate(geom = "text", x = 2011.3, y = 2, label = "Electoral Fraud", hjust = "left",color=Axis_color, size=3)+
+  scale_x_continuous(breaks = c(2012,2013,2016), label = c("2012","2013","2016"))+
+  scale_y_continuous(breaks = c(-2, 1.65), label = c("low", "high"))+
+  theme(axis.title.y = element_blank(),axis.title.x = element_blank())
+
+grid.arrange(Government,Corruption,ncol=1)
+```
+\
+In Venezuela there has been political unrest during the last decade. How the people perceive their leaders actions 
+
+
+
+
+
+
+
