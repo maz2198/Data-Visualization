@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+
+<!-- Google fonts Second Reference-->
+<link  href="https://fonts.googleapis.com/css?family=Playfair+Display|Playfair+Display+SC&display=swap" rel="stylesheet" type='text/css'>
+
+<!-- Connecting with D3 library-->
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+
+<p id="h1">Drone Fatalities </p>
+<p id="h2"> Deaths caused over the last 3 presidencies:  </p>
+ <button id="Pakistan" style="position: absolute; margin-left: 200px; margin-top: 10px;">PAKISTAN</button>
+ <button id="Afghanistan" style="position: absolute; margin-left: 300px; margin-top: 10px;">AFGHANISTAN</button>
+ <button id="Yemen" style="position: absolute; margin-left: 430px; margin-top: 10px;">YEMEN</button>
+
+ <text id="Bush" style = "position: absolute ; margin-left: 550px; margin-top: -22px;">Bush</text>
+
+ <text id="Obama" style = "position: absolute; margin-left: 550px; margin-top: -2px;">Obama</text>
+
+ <text id="Trump" style = "position: absolute; margin-left: 550px; margin-top: 20px;">Trump</text>
+
+<style>
+
+/*Defining text stylings*/
+
+#h1 {
+  font-size: 42px;
+  margin: 0px 0px 2px 0px;
+  font-family: 'Playfair display', serif;
+  font-weight: 200;
+  font-variant: small-caps slashed-zero;
+  color: White;
+  text-align: left;
+  }
+
+#h2 {
+  font-size: 18px;
+  margin: 0px 0px 0px 0px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 200;
+  color: white;
+  text-align: left;
+  }
+
+body {
+  background-color:#000000;
+}
+
+/*Defining axis stylings*/
+
+.x-axis text {
+        font-family: 'Playfair Display',serif;
+      	font-weight: 300;
+        font-size:15px;
+  			fill-opacity:1;
+        fill: white;
+      }
+
+.y-axis text {
+        font-family: 'Playfair Display',serif;
+      	font-weight: 100;
+        font-size:9px;
+      	opacity:0.8;
+        fill: #cccccc;
+      }
+
+.y-axis path, .x-axis path {
+        fill: none;
+        stroke-width: 0;
+        stroke-opacity:1;
+        stroke: #cccccc;
+      }
+
+.y-axis line, .x-axis line {
+        fill: none;
+        stroke-width: 0;
+        stroke-opacity:1;
+        stroke: #cccccc;
+      }
+
+/*Defining chart stylings*/
+.bar {
+  fill-opacity:1;
+}
+
+.bar:hover {
+  fill:gray;
+  fill-opacity:0.4;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-size: 17px;
+  font-family: 'Playfair Display',serif;
+  padding: 12px;
+  background: #444444;
+  border-radius: 10px;
+}
+
+  /* Small triangle extender for the Tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: #444444;
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+#Bush {
+  font-family: 'Playfair Display',serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #ff0000;
+  }
+
+ #Obama {
+  font-family: 'Playfair Display',serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #ffffff;
+  }
+
+#Trump {
+  font-family: 'Playfair Display',serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #0000ff;
+  }
+
+#Afghanistan{
+  font-family: 'Playfair Display',serif;
+  font-size: 15px;
+  font-weight: 200;
+  color: #f9f9f9;
+  border: 1;
+  line-height: 1.9;
+  padding: 0 10px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #111111;
+}
+
+#Afghanistan:hover {
+  color: #111111;
+  border: 0;
+  background-color:  red;
+}
+ #Pakistan {
+  font-family: 'Playfair Display',serif;
+  font-size: 15px;
+  font-weight: 200;
+  color: #f9f9f9;
+  border: 1;
+  line-height: 1.9;
+  padding: 0 10px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #111111;
+}
+
+#Pakistan:hover {
+  color: #111111;
+  border: 0;
+  background-color:  red;
+}
+
+ #Yemen {
+  font-family: 'Playfair Display',serif;
+  font-size: 15px;
+  font-weight: 200;
+  color: #f9f9f9;
+  border: 1;
+  line-height: 1.9;
+  padding: 0 10px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #111111;
+}
+
+#Yemen:hover {
+  color: #111111;
+  border: 0;
+  background-color:  red;
+}
+#Least {
+  font-family: 'Playfair Display',serif;
+  font-size: 15px;
+  font-weight: 200;
+  color: #f9f9f9;
+}
+</style>
+
+<script>
+
+//Color scale
+var Bush = "#ff0000"
+var Obama = "#ffffff"
+var Trump = "#0000ff"
+
+//Margin conventions
+var margin = {top: 180, right: 0, bottom: 30, left: 50},
+width = 850 - margin.left - margin.right,
+height = 550 - margin.top - margin.bottom;
+
+//Container
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.scaleBand()
+					.rangeRound([0, width])
+					.paddingInner(0.05);
+
+svg.append("g")
+   .attr("class", "x-axis")
+   .attr("transform", "translate(" + height + ")0")
+  .call(d3.axisTop(x));
+
+
+
+d3.select("#Pakistan")
+  .on("click", function() {
+
+d3.selectAll(".bar").remove()
+
+//Data loading
+d3.csv('https://gist.githubusercontent.com/aminabaza/0764499efff3efebb7c9cd808d2e7305/raw/f3d4f325ec73712f7fb8ed0af85ac445c90f668a/normalized', prepare, function(data) {
+
+//X scale
+x.domain(data.map(d=> d.Year))
+
+svg.select(".x-axis")
+   .attr("transform", "translate(" + height + ")0")
+   .transition()
+	 .duration((d,i)=> {if(i<4){return 5000;}})
+  .call(d3.axisTop(x));
+
+//Y scale
+var y = d3.scaleLinear()
+			    .domain([0, d3.max(data,d=> d.Total)])
+			    .range([height,0]);
+
+//Y axis
+svg.append("g")
+   .attr("class", "y-axis")
+   .call(d3.axisLeft(y)
+   .ticks(0));
+
+
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-32, 0])
+  .html(function(d) {
+    return "<span style='font-size:15px; color:white'>Total: </span> <span style='font-size:18px; color:red; fill-opacity: 0.7'>" + d.Total + "</span><br><span style='font-size:15px; color:white'>Children: </span> <span style='font-size:18px; color:red'>" + d.Children + "</span> <br><span style='font-size:15px; color:white'>Adults: </span> <span style='font-size:18px; color:red'>" + d.Adults + "</span> <br><span style='font-size:15px; color:white'>Combatants: </span> <span style='font-size:18px; color:red'>" + d.Combatants + "</span>";
+  })
+
+svg.call(tip);
+
+var pak = svg.selectAll(".bar")
+          .data(data, function(d) { return d.Total; });
+pak.enter().append('rect')
+   .data(data)
+	 .style("fill", "")
+	 .attr('class', 'bar')
+	 .attr("x", d=> x(d.Year))
+	 .attr("width", x.bandwidth())
+	 .attr('y', function(d) { return height - d; })
+	 .attr("height",0)
+	 .on('mouseover', tip.show)
+   .on('mouseout', tip.hide)
+   .attr("fill",(d,i)=> {if(i<4){return Bush;}else{{if(i<13){return Obama;}else{return Trump;}}}})
+   .transition()
+	 .duration((d,i)=> {if(i<4){return 1800;}else{{if(i<13){return 3000;}else{return 3000;}}}})
+	 .delay((d,i)=> {if(i<4){return 1000;}else{{if(i<13){return 2800;}else{return 4800;}}}})
+	 .attr("y",d=> y(d.Total))
+	 .attr("height",d=> height - y(d.Total));
+
+});
+
+
+//Make sure all variables are numbers
+function prepare (d) {
+  d.Total = +d.Total;
+  return d;
+}
+
+  });
+
+d3.select("#Afghanistan")
+  .on("click", function() {
+
+d3.selectAll(".bar").remove()
+
+
+
+//Data loading
+d3.csv('https://gist.githubusercontent.com/aminabaza/0764499efff3efebb7c9cd808d2e7305/raw/b38bcf5aa4a3c0fa58b7f2a86b72167a68b8eead/Afg', prepare, function(data) {
+
+
+//X scale
+x.domain(data.map(d=> d.Year))
+
+
+var xaxis = d3.axisTop()
+              .scale(x)
+//X axis
+
+svg.select(".x-axis")
+   .attr("transform", "translate(" + height + ")0")
+   .transition()
+	 .duration((d,i)=> {if(i<4){return 3000;}})
+  .call(d3.axisTop(x));
+
+//Y scale
+var y = d3.scaleLinear()
+			    .domain([0, d3.max(data,d=> d.Total)])
+			    .range([height,0]);
+
+//Y axis
+svg.append("g")
+   .attr("class", "y-axis")
+   .call(d3.axisLeft(y)
+   .ticks(0));
+
+
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-32, 0])
+  .html(function(d) {
+    return "<span style='font-size:15px; color:white'>Total: </span> <span style='font-size:18px; color:red'>" + d.Total + "</span><br><span style='font-size:15px; color:white'>Children: </span> <span style='font-size:18px; color:red'>" + d.Children + "</span> <br><span style='font-size:15px; color:white'>Adults: </span> <span style='font-size:18px; color:red'>" + d.Adults + "</span> <br><span style='font-size:15px; color:white'>Combatants: </span> <span style='font-size:18px; color:red'>" + d.Combatants + "</span>";
+  })
+
+svg.call(tip);
+
+//Draw the bars
+var Afg = svg.selectAll(".bar")
+          .data(data, function(d) { return d.Total; });
+Afg.enter().append('rect')
+   .data(data)
+	 .style("fill", "")
+	 .attr('class', 'bar')
+	 .attr("x", d=> x(d.Year))
+	 .attr("width", x.bandwidth())
+	 .attr('y', function(d) { return height - d; })
+	 .attr("height",0)
+	 .on('mouseover', tip.show)
+   .on('mouseout', tip.hide)
+   .attr("fill",(d,i)=> {if(i<2){return Obama;}else{return Trump;}})
+   .transition()
+	 .duration((d,i)=> {if(i<2){return 2500;}else{{if(i<13){return 3000;}else{return 3000;}}}})
+	 .delay((d,i)=> {if(i<2){return 1000;}else{{if(i<13){return 2800;}else{return 4800;}}}})
+	 .attr("y",d=> y(d.Total))
+	 .attr("height",d=> height - y(d.Total));
+
+});
+
+
+//Make sure all variables are numbers
+function prepare (d) {
+  d.Total = +d.Total;
+  return d;
+}
+
+});
+
+d3.select("#Yemen")
+  .on("click", function() {
+
+d3.selectAll(".bar").remove()
+
+
+
+//Data loading
+d3.csv('https://gist.githubusercontent.com/aminabaza/54f8bc77509ffc04e315780f8041efc6/raw/889649c7f22a94632b2333a69b47fac49b5c83e0/yemen.csv', prepare, function(data) {
+
+
+//X scale
+x.domain(data.map(d=> d.Year))
+
+
+var xaxis = d3.axisTop()
+              .scale(x)
+//X axis
+
+svg.select(".x-axis")
+   .attr("transform", "translate(" + height + ")0")
+   .transition()
+	 .duration((d,i)=> {if(i<4){return 3000;}})
+  .call(d3.axisTop(x));
+
+//Y scale
+var y = d3.scaleLinear()
+			    .domain([0, d3.max(data,d=> d.Total)])
+			    .range([height,0]);
+
+//Y axis
+svg.append("g")
+   .attr("class", "y-axis")
+   .call(d3.axisLeft(y)
+   .ticks(0));
+
+
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-32, 0])
+  .html(function(d) {
+    return "<span style='font-size:15px; color:white'>Total: </span> <span style='font-size:18px; color:red'>" + d.Total + "</span><br><span style='font-size:15px; color:white'>Children: </span> <span style='font-size:18px; color:red'>" + d.Children + "</span> <br><span style='font-size:15px; color:white'>Adults: </span> <span style='font-size:18px; color:red'>" + d.Adults + "</span> <br><span style='font-size:15px; color:white'>Combatants: </span> <span style='font-size:18px; color:red'>" + d.Combatants + "</span>";
+  })
+
+svg.call(tip);
+
+//Draw the bars
+var Afg = svg.selectAll(".bar")
+          .data(data, function(d) { return d.Total; });
+Afg.enter().append('rect')
+   .data(data)
+	 .style("fill", "")
+	 .attr('class', 'bar')
+	 .attr("x", d=> x(d.Year))
+	 .attr("width", x.bandwidth())
+	 .attr('y', function(d) { return height - d; })
+	 .attr("height",0)
+	 .on('mouseover', tip.show)
+   .on('mouseout', tip.hide)
+   .attr("fill",(d,i)=> {if(i<7){return Obama;}else{return Trump;}})
+   .transition()
+	 .duration((d,i)=> {if(i<7){return 1800;}else{{if(i<13){return 3000;}else{return 3000;}}}})
+	 .delay((d,i)=> {if(i<7){return 1000;}else{{if(i<13){return 2800;}else{return 4800;}}}})
+	 .attr("y",d=> y(d.Total))
+	 .attr("height",d=> height - y(d.Total));
+
+});
+
+
+//Make sure all variables are numbers
+function prepare (d) {
+  d.Total = +d.Total;
+  return d;
+}
+
+});
+</script>
